@@ -1,0 +1,74 @@
+
+================ INPUT ================
+       Key |  Probability
+        10 |       0.1000
+        20 |       0.2000
+        30 |       0.4000
+        40 |       0.2000
+        50 |       0.1000
+Sum of probabilities: 1.000000
+
+================ DP TABLES ================
+
+DP Cost Table C[i,j]  (rows = i, cols = j)
+            0       1       2       3       4       5
+i=1     0.000   0.100   0.400   1.100   1.500   1.800
+i=2             0.000   0.200   0.800   1.200   1.500
+i=3                     0.000   0.400   0.800   1.100
+i=4                             0.000   0.200   0.400
+i=5                                     0.000   0.100
+
+Root Table R[i,j]  (rows = i, cols = j)  -- values are 1-based key indices
+            1       2       3       4       5
+i=1         1       2       3       3       3
+i=2                 2       3       3       3
+i=3                         3       3       3
+i=4                                 4       4
+i=5                                         5
+
+================ OPTIMAL BST ================
+30 (p=0.4000)
+    L-- 20 (p=0.2000)
+    |   L-- 10 (p=0.1000)
+    R-- 40 (p=0.2000)
+        R-- 50 (p=0.1000)
+
+================ RESULTS ================
+Minimum expected search cost (from DP table C[1,n]): 1.800000
+Verified expected cost (computed by walking the tree): 1.800000
+DP table build time: 0.0149 ms
+Key levels (depth, root = 1):
+  10: level 3
+  20: level 2
+  30: level 1
+  40: level 2
+  50: level 3
+
+================ CONVENTIONAL BST COMPARISON ================
+(a) Degenerate BST -- keys inserted sequentially in sorted order,
+    which is what a plain BST insertion routine produces here:
+10 (p=0.1000)
+    R-- 20 (p=0.2000)
+        R-- 30 (p=0.4000)
+            R-- 40 (p=0.2000)
+                R-- 50 (p=0.1000)
+
+(b) Balanced BST -- median of each range as its root,
+    structurally optimal but probability-agnostic:
+30 (p=0.4000)
+    L-- 10 (p=0.1000)
+    |   R-- 20 (p=0.2000)
+    R-- 40 (p=0.2000)
+        R-- 50 (p=0.1000)
+
+Tree                       |  Exp. cost |  Avg depth |     Build cost
+----------------------------------------------------------------------
+Degenerate (insertion)     |   3.000000 |     3.0000 |       10 cmp
+Balanced (median root)     |   1.900000 |     2.2000 |       Theta(n)
+Optimal (DP)               |   1.800000 |     2.2000 |       30 ops
+
+-> Optimal BST beats the degenerate BST by 1.200000 (40.00%).
+-> Optimal BST beats the balanced BST by 0.100000 (5.26%).
+   This second gap is the one that matters: the balanced tree is already
+   structurally optimal, so the difference is due purely to using the
+   search probabilities.
