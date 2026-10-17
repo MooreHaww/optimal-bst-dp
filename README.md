@@ -1,100 +1,84 @@
-# Optimal Binary Search Tree via Dynamic Programming
+<div align="center">
 
-Design and Analysis of Algorithms — Project
+# 🌳 Optimal Binary Search Tree
 
-## Requirements
+**Build the search tree that needs the fewest comparisons on average, using dynamic programming, and measure how much it really helps.**
 
-- Python 3.7 or later (no external libraries required — standard library only)
+![Python](https://img.shields.io/badge/python-3.7%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Dependencies](https://img.shields.io/badge/dependencies-0-success?style=for-the-badge)
+![Complexity](https://img.shields.io/badge/time-%CE%98(n%C2%B3)-orange?style=for-the-badge)
+![Course](https://img.shields.io/badge/course-Algorithms-8A2BE2?style=for-the-badge)
 
-## Files
+</div>
 
-| File | Purpose |
+---
+
+## 💡 Why this project exists
+
+A normal binary search tree treats every key the same. Real lookups do not: in a dictionary or a database a few keys are searched all the time and most almost never. If you know how often each key is searched, you can arrange the tree so the popular keys sit near the top and the average search gets cheaper.
+
+Finding that best arrangement is a classic **dynamic programming** problem. This is my **Design and Analysis of Algorithms** project: implement it, prove it is correct, and measure whether it is worth the cost.
+
+## 🔎 What it does
+
+Given sorted keys and the probability of searching for each, the program:
+
+1. Builds a **cost table** `C[i,j]` and a **root table** `R[i,j]` with dynamic programming.
+2. Reconstructs the optimal tree and prints it as a diagram.
+3. Reports the minimum expected search cost and **verifies it independently** by walking the tree.
+4. Compares the result with two ordinary trees: a **degenerate** one (plain insertion of sorted keys) and a **balanced** one (median as root).
+5. Runs timing experiments for n = 5, 10, 20, 50 and 100 on uniform, random and skewed probabilities.
+6. Rejects bad input (unsorted or duplicate keys, negative probabilities, probabilities that do not sum to 1) with a clear message and a non-zero exit code.
+
+On the assignment's 5-key example:
+
+```text
+30 (p=0.4000)
+    L-- 20 (p=0.2000)
+    |   L-- 10 (p=0.1000)
+    R-- 40 (p=0.2000)
+        R-- 50 (p=0.1000)
+
+Optimal (DP)            expected cost 1.800
+Balanced (median root)  expected cost 1.900
+Degenerate (insertion)  expected cost 3.000
+```
+
+### 📊 The main finding: it depends on how skewed the searches are
+
+| Probabilities | Optimal BST vs balanced BST (n = 100) |
 |---|---|
-| `obst_core.py` | Core DP algorithm: builds the cost table `C` and root table `R`, plus tree reconstruction |
-| `obst_utils.py` | Table printing, level/depth computation, cost verification, and the two probability-agnostic baseline BSTs (degenerate and balanced) used for comparison |
-| `experiments.py` | Generates test inputs (random, uniform, or skewed probability distributions) and times the algorithm for n = 5, 10, 20, 50, 100, with multi-run averaging, an operation counter, and per-size comparison against a conventional BST |
-| `main.py` | Program entry point — ties everything together, handles input (interactive, file, or example), and prints the full report |
-| `obst_analysis.py` | **Bonus (not required by the assignment):** brute-force optimality check, extra baselines (greedy, Mehlhorn), entropy bounds, and an empirical complexity fit |
-| `sample_input.txt` | Sample input file (the assignment's 5-key example) |
-| `sample_output.txt` | Sample output produced by running the program on `sample_input.txt` |
+| Uniform (every key equally likely) | about 0%: nothing to optimise |
+| Random | about 12% better |
+| Skewed (one "hot" key holds 90%) | about **75% better**, and the gap grows with n |
 
-## How to Run
+The cost of building the tree follows the theory: the operation count grows about 7.8× when n doubles from 50 to 100, close to the 8× expected for a cubic algorithm. The trade-off is a one-time cubic build for a permanently cheaper search.
 
-### Option 1 — Interactive menu
-```
-python3 main.py
-```
-Shows a six-item menu: run the example input, enter your own input, run the
-timing experiments, load input from a file, run the experiments across all
-three probability distributions, or run the bonus analysis module.
+*Numbers come from `python main.py --experiments-all`; random inputs vary slightly between runs.*
 
-### Option 2 — Run the assignment's example directly
-```
-python3 main.py --example
+## ⚙️ Setup
+
+You need Python 3.7 or newer. No packages to install.
+
+```bash
+git clone https://github.com/MooreHaww/optimal-bst-dp.git
+cd optimal-bst-dp
+python main.py --example
 ```
 
-### Option 3 — Run the timing experiments (n = 5, 10, 20, 50, 100)
-```
-python3 main.py --experiments
-```
-Uses a random probability distribution, averages timing over 10 runs per
-size to reduce measurement noise, and reports a hardware-independent
-operation count alongside wall-clock time. Also compares against a
-conventional BST at every size and verifies the DP cost via an
-independent tree-walk.
+| Command | What it does |
+|---|---|
+| `python main.py` | Interactive menu |
+| `python main.py --example` | The assignment's 5-key example |
+| `python main.py --file sample_input.txt` | Read keys and probabilities from a file |
+| `python main.py --experiments` | Timing experiments, n = 5 to 100 |
+| `python main.py --experiments-all` | Experiments for uniform, random and skewed probabilities |
+| `python main.py --analysis` | Bonus: brute-force check, heuristics, entropy bounds, complexity fit |
+| `--show-tables` / `--no-tables` | Force or hide the DP tables (shown by default only when n ≤ 20) |
 
-### Option 4 — Run experiments across all probability distributions
-```
-python3 main.py --experiments-all
-```
-Repeats the above for **uniform**, **random**, and **skewed** ("hot key")
-probability distributions, so you can see how much the Optimal BST's
-advantage over a conventional BST depends on how skewed the search
-pattern is. (Spoiler: with uniform probabilities the improvement is ~0%;
-with a heavily skewed distribution it grows past 70% as n increases.)
+Input file format (keys strictly increasing, probabilities sum to 1):
 
-### Option 5 — Provide input from a file
-```
-python3 main.py --file sample_input.txt
-```
-
-### Option 6 — Bonus analysis module
-```
-python3 main.py --analysis
-```
-Not required by the assignment. Runs the brute-force optimality check for
-n ≤ 8, compares the DP against the greedy and Mehlhorn heuristics plus the
-information-theoretic entropy bounds, and fits the measured operation count
-against n² and n³ for both the required `classic` method and the optional
-`knuth` refinement.
-
-### Controlling table output
-
-By default the DP tables and the tree diagram are printed only when
-n ≤ 20 — a 100 × 100 table is unreadable in a terminal and buries the
-results. Override this with either flag:
-```
-python3 main.py --file big_input.txt --show-tables
-python3 main.py --example --no-tables
-```
-The tables are always computed in full regardless; this only controls printing.
-
-## Input File Format
-
-```
-<n>
-<key_1> <probability_1>
-<key_2> <probability_2>
-...
-<key_n> <probability_n>
-```
-
-Keys must be sorted in strictly increasing order. Probabilities must be
-non-negative and sum to approximately 1.0 (small floating-point rounding is
-tolerated).
-
-Example (`sample_input.txt`):
-```
+```text
 5
 10 0.10
 20 0.20
@@ -103,89 +87,53 @@ Example (`sample_input.txt`):
 50 0.10
 ```
 
-## What the Program Outputs
+## 🎯 What I wanted to learn
 
-For any given input, the program prints:
+- How to turn a problem into a **DP recurrence**: define the state, the base case, and how to combine sub-answers.
+- How to rebuild the actual answer (the tree) from a table of choices, not just its cost.
+- How to check an algorithm two ways: an independent tree-walk, and a brute-force search for small n.
+- How to measure complexity honestly, with a hardware-independent operation count next to wall-clock time.
+- Why a fair comparison matters: beating a degenerate tree proves little, beating a balanced tree proves the DP is using the probabilities.
 
-1. The input keys and probabilities (echoed back, with the probability sum)
-2. The full DP cost table `C[i,j]`
-3. The full root table `R[i,j]`
-4. The reconstructed Optimal BST (as an indented tree diagram)
-5. The minimum expected search cost, read directly from `C[1,n]`
-6. An independently verified expected cost (computed by walking the actual
-   tree and summing `probability × depth`) — this should always match #5
-7. The level (depth) of every key in the optimal tree
-8. The DP table build time
-9. A three-way comparison against two probability-agnostic baseline BSTs
-   built over the same keys — a **degenerate** tree (keys inserted one at a
-   time in sorted order, which is what a plain BST insertion routine
-   produces) and a **balanced** tree (median of each range as its root) —
-   showing each tree's structure, expected cost, average depth, and
-   construction cost
+## 🏗️ How it was built
 
-(At n > 20, items 2, 3, 4 and 7 are summarised rather than printed in full
-unless `--show-tables` is given.)
-
-Invalid input is detected before any computation and reported clearly, with
-a non-zero exit code. This covers both malformed files (missing file, a
-non-numeric key count, fewer key lines than the header promises, a line that
-is not `<key> <probability>`, a non-numeric field) and invalid values
-(negative probabilities, probabilities not summing to ~1, unsorted or
-duplicate keys).
-
-## What the Experiments Show
-
-### Why two baselines
-
-Section 8 of the assignment asks for a comparison against a "conventional
-BST". Two different trees can reasonably claim that name, and the program
-reports both:
-
-| Baseline | How it is built | Construction cost | What comparing against it shows |
-|---|---|---|---|
-| **Degenerate** | Insert keys one at a time in the order given | Θ(n²) comparisons — each insert walks the whole right spine, because the input is sorted | The literal reading of "conventional BST". It loses badly, but mostly because it is unbalanced, not because it ignores probabilities |
-| **Balanced** | Median key of each range becomes that range's root | Θ(n) | The interesting comparison. This tree is already structurally optimal, so any remaining gap is due **purely** to using the search probabilities |
-
-On the assignment's 5-key example, the optimal tree and the balanced tree
-have the *same* average depth (2.2) but different expected costs (1.800 vs
-1.900) — the DP does not build a shallower tree, it builds a better-weighted
-one.
-
-### How the advantage depends on the distribution
-
-Running `python3 main.py --experiments-all` reveals a pattern worth
-discussing in the report:
-
-| Distribution | OBST advantage over the balanced BST |
+| File | Purpose |
 |---|---|
-| Uniform (all keys equally likely) | ~0% — with no probability skew, there's nothing for the DP to optimise; the OBST converges to the same shape as a balanced tree |
-| Random | ~4–15%, depending on how the random probabilities happen to fall |
-| Skewed (one "hot" key holds 90%) | 59–75%, and **increasing with n** |
+| `obst_core.py` | The DP: cost table, root table, tree reconstruction |
+| `obst_utils.py` | Table and tree printing, depth computation, cost verification, the two baseline trees |
+| `experiments.py` | Input generators and the timing and comparison runs |
+| `main.py` | Entry point: menu, flags, file input, full report |
+| `obst_analysis.py` | Bonus module: brute force, greedy and Mehlhorn heuristics, entropy bounds, curve fitting |
+| `sample_input.txt`, `sample_output.txt` | The 5-key example and its output |
 
-This is the core practical argument for using DP-based OBST construction:
-the more skewed the real-world access pattern (which is the common case —
-e.g. a small number of dictionary words or database keys account for most
-lookups), the more expected-cost improvement you get over a naive balanced
-tree, and that advantage grows as the key set grows.
+**The algorithm**
 
-### Construction cost
+- `C[i,j]` = minimum expected comparisons for a tree over keys `i..j`.
+- Base case: `C[i,i] = p[i]` and `C[i,i-1] = 0` (an empty tree).
+- Recurrence: `C[i,j] = min over k in [i..j] of ( C[i,k-1] + C[k+1,j] ) + sum(p[i..j])`.
+- `R[i,j]` stores the best root `k`, which is used to rebuild the tree.
+- Time Θ(n³), space Θ(n²).
 
-The three trees separate cleanly by build cost, and the measured times track
-the theory: doubling n roughly doubles the balanced build (Θ(n)),
-quadruples the degenerate build (Θ(n²)), and octuples the OBST build
-(Θ(n³)). The OBST's operation count grows by about 7.8× from n = 50 to
-n = 100, close to the theoretical 8× for a cubic algorithm. That trade-off
-— a cubic preprocessing cost paid once, against a permanently lower expected
-search cost — is the practical question the Discussion section should answer.
+**Build order**
 
-## Algorithm Summary
+1. Core DP and tree reconstruction.
+2. Input validation and the report format.
+3. Cost verification by walking the tree.
+4. Baseline trees and the comparison table.
+5. Experiments with several distributions and an operation counter.
+6. Bonus analysis module.
 
-- **State:** `C[i,j]` = minimum expected number of comparisons for a BST
-  built from keys `i` through `j`.
-- **Base case:** `C[i,i] = p[i]`, `C[i,i-1] = 0` (empty subtree).
-- **Recurrence:** for `j > i`,
-  `C[i,j] = min over k in [i..j] of { C[i,k-1] + C[k+1,j] } + sum(p[i..j])`
-- **Root table:** `R[i,j]` records which `k` achieved the minimum, which is
-  used to reconstruct the actual tree afterward.
-- **Complexity:** Time `Θ(n³)`, Space `Θ(n²)` (three nested loops over `i`,
-  `j`, and the choice of root `k`).
+## 🗺️ Plan / what's next
+
+- [x] Optimal BST by DP with verification
+- [x] Comparison with degenerate and balanced trees
+- [x] Experiments across three distributions
+- [x] Bonus analysis (brute force, heuristics, entropy bounds)
+- [ ] Make Knuth's optimisation (already compared in the bonus analysis) the default, which brings the time down to about O(n²)
+- [ ] Add automated unit tests
+- [ ] Plot the experiment results instead of printing tables
+- [ ] Visualise the tree as an image
+
+## 📄 Notes
+
+Built for a university Design and Analysis of Algorithms course.
